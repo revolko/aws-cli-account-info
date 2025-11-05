@@ -1,9 +1,14 @@
 # aws-cli-account-info
 Rust CLI tool for Command Prompt integration
 
-# ZSH example
+## Installation
+```bash
+cargo install aws-cli-account-info
+```
+
+## ZSH example
 ```zsh
-PROMPT='%(!.%{$fg[red]%}.%{$fg[green]%})%~$(git_prompt_info)%{$reset_color%} %{$fg_bold[yellow]%}$(local-aws-cli-account-info)%{$reset_color%}'
+PROMPT='%(!.%{$fg[red]%}.%{$fg[green]%})%~$(git_prompt_info)%{$reset_color%} %{$fg_bold[yellow]%}$(aws-cli-account-info)%{$reset_color%}'
 
 ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg_bold[blue]%}("
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$fg_bold[blue]%})"
