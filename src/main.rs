@@ -17,31 +17,40 @@ fn main() -> anyhow::Result<()> {
     };
 
     let config_path_expanded = shellexpand::env(&config_path)?.into_owned();
-    let accounts_raw = match fs::read_to_string(&config_path_expanded) {
-        Ok(raw) => raw,
-        Err(e) => panic!("Unable to read file {config_path_expanded}. Error: {e}"),
+    let yaml_accounts = match fs::read_to_string(&config_path_expanded) {
+        Ok(raw) => Some(YamlLoader::load_from_str(&raw)?),
+        Err(_e) => None,
     };
-    let yaml_accounts = YamlLoader::load_from_str(&accounts_raw)?;
-    let accounts = yaml_accounts
-        .first()
-        .context("Accounts yaml is empty")?
-        .as_hash()
-        .context("Accounts yaml cannot be parsed as HashMap")?
-        .get(&Yaml::from_str(ACCOUNTS_KEY))
-        .context("`accounts` keyword not found in Accounts yaml")?
-        .as_hash()
-        .context("Accounts cannot be parsed as HashMap")?;
 
-    let aws_account_id = match env::var(AWS_ACCOUNT_ID_ENV) {
+    let accounts = match &yaml_accounts {
+        Some(accounts) => Some(
+            accounts
+                .first()
+                .context("Accounts yaml is empty")?
+                .as_hash()
+                .context("Accounts yaml cannot be parsed as HashMap")?
+                .get(&Yaml::from_str(ACCOUNTS_KEY))
+                .context("`accounts` keyword not found in Accounts yaml")?
+                .as_hash()
+                .context("Accounts cannot be parsed as HashMap")?,
+        ),
+        None => None,
+    };
+
+    let mut aws_account_name = match env::var(AWS_ACCOUNT_ID_ENV) {
         Ok(account_id) => account_id,
         Err(_) => "".to_string(),
     };
-    let aws_account_name = match accounts.get(&Yaml::from_str(&aws_account_id)) {
-        Some(alternative) => alternative
-            .as_str()
-            .context("Cannot parse alternative name to str")?,
-        None => &aws_account_id,
-    };
+
+    if let Some(accounts) = accounts {
+        aws_account_name = match &accounts.get(&Yaml::from_str(&aws_account_name)) {
+            Some(alternative) => alternative
+                .as_str()
+                .context("Cannot parse alternative name to str")?
+                .to_string(),
+            None => aws_account_name,
+        };
+    }
 
     if aws_account_name == "" {
         return Ok(());
