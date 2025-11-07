@@ -1,6 +1,6 @@
 [package]
 name = "aws-cli-account-info"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 license = "MIT"
 author = "revolko (Juraj Paluba)"
